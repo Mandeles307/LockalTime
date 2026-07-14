@@ -1,0 +1,7 @@
+{
+  "name": "lockal-time",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
