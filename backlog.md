@@ -7,7 +7,7 @@ Prerequisites: none.
 
 - [x] Monorepo scaffold (`apps/mobile`, `apps/server`, `supabase/`, `docs/`, `skills/`)
 - [ ] React Native app init (bare workflow, not Expo managed — needed for native modules)
-- [~] Node.js API skeleton (Express, TypeScript, Jest+supertest) — files written (`apps/server/`: `app.ts`, `server.ts`, `health.test.ts`, config), **unverified**: Node.js isn't installed on this machine yet, so `npm install` / `npm test` have not been run. Do not mark `[x]` until confirmed green.
+- [x] Node.js API skeleton (Express, TypeScript, Jest+supertest) — `npm install` + `npm test` + `npm run build` all verified green in `apps/server`.
 - [ ] Local Supabase project + CLI (`supabase start`), initial migration for `users`
 - [ ] CI pipeline: lint + typecheck + test, green on empty-feature repo
 - [ ] `skills/` seeded: `code-style.md`, `typescript-strictness.md`, `supabase-integration.md`, `testing-standards.md`
