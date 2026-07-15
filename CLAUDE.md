@@ -3,7 +3,6 @@
 Social, location/time/group-based distraction-blocking app. Native iOS + Android via React Native, Node.js API for business logic, Supabase (Postgres/Auth/Realtime) for data/auth/realtime.
 
 **Read before doing anything else:**
-- [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md) — **read this first**: exactly where the last session left off, in-flight tasks, immediate next steps. A living snapshot, not stable design — overwrite it whenever pausing/resuming work.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — screens, tech stack, native blocking modules, realtime design, session lifecycle/host authority, points & bonus engine, security threat model
 - [docs/DATABASE.md](docs/DATABASE.md) — full schema, bonus computation algorithm, config constants
 - [backlog.md](backlog.md) — the phased WBS; current progress and next task
