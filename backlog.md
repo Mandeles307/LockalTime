@@ -6,7 +6,7 @@ Tracked per our working contract: one atomic task at a time, test-first, this fi
 Prerequisites: none.
 
 - [x] Monorepo scaffold (`apps/mobile`, `apps/server`, `supabase/`, `docs/`, `skills/`)
-- [ ] React Native app init (bare workflow, not Expo managed — needed for native modules)
+- [ ] React Native app init (bare workflow, not Expo managed — needed for native modules; React Navigation + Zustand + XState per ARCHITECTURE.md §3)
 - [x] Node.js API skeleton (Express, TypeScript, Jest+supertest) — `npm install` + `npm test` + `npm run build` all verified green in `apps/server`.
 - [ ] Local Supabase project + CLI (`supabase start`), initial migration for `users`
 - [ ] CI pipeline: lint + typecheck + test, green on empty-feature repo

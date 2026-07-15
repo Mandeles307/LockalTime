@@ -5,6 +5,7 @@ Social, location/time/group-based distraction-blocking app. Native iOS + Android
 **Read before doing anything else:**
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — screens, tech stack, native blocking modules, realtime design, session lifecycle/host authority, points & bonus engine, security threat model
 - [docs/DATABASE.md](docs/DATABASE.md) — full schema, bonus computation algorithm, config constants
+- [docs/DESIGN_GUIDELINES.md](docs/DESIGN_GUIDELINES.md) — spacing/radius/typography/motion consistency rules; read before building any screen. Color palette intentionally deferred.
 - [backlog.md](backlog.md) — the phased WBS; current progress and next task
 - `skills/` — code style, TypeScript strictness, Supabase conventions, testing standards (seeded in Phase 0, not yet created)
 

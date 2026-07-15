@@ -214,3 +214,4 @@ All rules above are confirmed final — see `docs/ARCHITECTURE.md` §7/§11.
 | `HOST_MIGRATION_PRESENCE_TIMEOUT_SECONDS` | 20 | debounced to avoid migration storms |
 | `OPEN_ENDED_SESSION_MAX_HOURS` | 24 | server force-closes past this |
 | `STREAK_GRACE_HOURS` | 48 | |
+| `BLOCKED_APP_CATEGORIES` | `[Social Networking, Games, Entertainment]` | Fixed default-category blocklist, not per-session/per-user configurable; see `docs/ARCHITECTURE.md` §4 |

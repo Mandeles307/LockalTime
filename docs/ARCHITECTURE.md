@@ -30,12 +30,19 @@ Known edge-case screens still needed but not yet designed (tracked in backlog): 
 
 | Layer | Responsibility | Rule |
 |---|---|---|
-| React Native app | UI, native module bridging, local blocker state | Never authoritative for points, QR validity, or session state — always defers to server on reconnect |
+| React Native app (bare workflow, **React Navigation**, **Zustand** for general app state, **XState** for session lifecycle) | UI, native module bridging, local blocker state | Never authoritative for points, QR validity, or session state — always defers to server on reconnect |
 | Node.js API (**Express**, TypeScript) | Session lifecycle, QR signing/validation, points/bonus calculation, host migration worker, device attestation checks | The **only** place money-equivalent logic (points, bonuses, QR tokens) is computed or minted. Client claims of "I completed X" are never trusted. Express chosen over NestJS: our API surface is small and well-bounded (~4-5 modules), and this is a solo/small-team build where NestJS's enforced-structure benefit (paying off with many contributors) doesn't outweigh its added ceremony per atomic task. |
 | Supabase (Postgres) | Source of truth for all persisted state | RLS-protected; direct client reads allowed for read-only aggregates (home summary, history, stats), never for writes that affect points |
 | Supabase Realtime | Live sync between clients | See §5 — Presence/Broadcast are UI-hints only; Postgres Changes (CDC) is the only trusted channel for state that affects points |
 
 ## 4. Native Blocking Modules
+
+### Blocking policy scope
+A session blocks a **fixed set of default categories** (e.g., Social Networking, Games, Entertainment) — not a per-session or per-user app picker. Neither platform requires us to maintain our own app-to-category database:
+- **iOS:** `FamilyControls`/`ManagedSettings` can restrict at the category level via `ActivityCategoryToken`, based on each app's own App Store category — we never need to know which specific apps a user has installed.
+- **Android:** apps declare a category via `ApplicationInfo.category` (`CATEGORY_SOCIAL`, `CATEGORY_GAME`, etc.), queryable via `PackageManager` at runtime; we filter installed apps by category at block-time.
+- **Known limitation:** Android's category field is inconsistently populated by developers (some apps are `CATEGORY_UNDEFINED`), so category-based blocking may miss a small number of mislabeled apps. Accepted limitation, not solved for MVP.
+- No new `sessions` schema needed for this — it's a fixed Node/native config constant (the blocked-category list), not user- or session-configurable data.
 
 ### Android
 - **Mechanism: `UsageStatsManager` polling + `SYSTEM_ALERT_WINDOW` overlay + Foreground Service.** Deliberately **not** using `AccessibilityService`: Google Play tightened AccessibilityService policy with enforcement from Jan 28, 2026 — non-accessibility uses require a Play Console declaration, mandatory in-app disclosure + affirmative consent, and a stricter review process, with no exemption available to us (`isAccessibilityTool=true` is reserved for genuine disability-accessibility tools). UsageStats + Overlay avoids that review gate entirely, at the cost of ~1-2s polling lag instead of instant event detection — acceptable for this use case.
