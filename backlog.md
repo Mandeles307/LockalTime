@@ -10,7 +10,7 @@ Prerequisites: none.
 - [x] Node.js API skeleton (Express, TypeScript, Jest+supertest) — `npm install` + `npm test` + `npm run build` all verified green in `apps/server`.
 - [ ] Local Supabase project + CLI (`supabase start`), initial migration for `users`
 - [ ] CI pipeline: lint + typecheck + test, green on empty-feature repo
-- [ ] `skills/` seeded: `code-style.md`, `typescript-strictness.md`, `supabase-integration.md`, `testing-standards.md`
+- [x] `skills/` seeded: `code-style.md`, `typescript-strictness.md`, `supabase-integration.md`, `testing-standards.md`
 
 **DoD:** `npm test` and `npm run lint` pass on an empty-feature repo; local Supabase boots; CI pipeline green.
 
