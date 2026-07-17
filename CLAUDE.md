@@ -1,3 +1,5 @@
+> ⚠️ **HANDOFF IN PROGRESS:** if `HANDOFF.md` exists in the repo root, read it FIRST, follow its steps, then delete it and remove this line.
+
 # Lockal Time
 
 Social, location/time/group-based distraction-blocking app. Native iOS + Android via React Native, Node.js API for business logic, Supabase (Postgres/Auth/Realtime) for data/auth/realtime.
