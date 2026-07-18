@@ -9,7 +9,7 @@ Prerequisites: none.
 - [x] React Native app init (bare workflow, not Expo managed — needed for native modules; React Navigation + Zustand + XState per ARCHITECTURE.md §3) — RN 0.86.0 in `apps/mobile`, app id `com.lockaltime.app` set on both platforms, jest/lint/typecheck green (manual QA pending: compiling/running Android & iOS — no SDK platforms or Mac on this machine)
 - [x] Node.js API skeleton (Express, TypeScript, Jest+supertest) — `npm install` + `npm test` + `npm run build` all verified green in `apps/server`.
 - [x] Local Supabase project + CLI (`supabase start`), initial migration for `users` — local stack healthy, `users` table + RLS migrated locally and to the linked production project (`LockalTime`), pgTAP suite (12/12) green via `supabase test db`.
-- [ ] CI pipeline: lint + typecheck + test, green on empty-feature repo
+- [x] CI pipeline: lint + typecheck + test, green on empty-feature repo — GitHub Actions (`.github/workflows/ci.yml`): server/mobile/db jobs, Node 24, pgTAP via pinned supabase CLI; run 29637534378 fully green
 - [x] `skills/` seeded: `code-style.md`, `typescript-strictness.md`, `supabase-integration.md`, `testing-standards.md`
 
 **DoD:** `npm test` and `npm run lint` pass on an empty-feature repo; local Supabase boots; CI pipeline green.
