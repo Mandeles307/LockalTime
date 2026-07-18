@@ -8,7 +8,7 @@ Prerequisites: none.
 - [x] Monorepo scaffold (`apps/mobile`, `apps/server`, `supabase/`, `docs/`, `skills/`)
 - [ ] React Native app init (bare workflow, not Expo managed — needed for native modules; React Navigation + Zustand + XState per ARCHITECTURE.md §3)
 - [x] Node.js API skeleton (Express, TypeScript, Jest+supertest) — `npm install` + `npm test` + `npm run build` all verified green in `apps/server`.
-- [ ] Local Supabase project + CLI (`supabase start`), initial migration for `users`
+- [x] Local Supabase project + CLI (`supabase start`), initial migration for `users` — local stack healthy, `users` table + RLS migrated locally and to the linked production project (`LockalTime`), pgTAP suite (12/12) green via `supabase test db`.
 - [ ] CI pipeline: lint + typecheck + test, green on empty-feature repo
 - [x] `skills/` seeded: `code-style.md`, `typescript-strictness.md`, `supabase-integration.md`, `testing-standards.md`
 
@@ -17,7 +17,8 @@ Prerequisites: none.
 ## Phase 1 — Auth & Onboarding (Screens 1–3)
 Prerequisites: Phase 0.
 
-- [ ] Supabase Auth wiring: Google, Apple, email
+- [ ] i18n + RTL foundation: en + he locales, RTL-safe layout conventions, no hardcoded UI strings (decided in CLAUDE.md — both languages from day one)
+- [ ] Supabase Auth wiring: email first (fully tested); Google + Apple wired against placeholder config, "manual QA pending" until real credentials (per CLAUDE.md decision)
 - [ ] `users` row auto-created via trigger on signup
 - [ ] Onboarding carousel (Screen 1)
 - [ ] Permission-priming screen copy/logic (Screen 2) — including the denied-permission fallback state

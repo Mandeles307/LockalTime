@@ -1,13 +1,11 @@
 -- pgTAP test for public.users and its RLS policies.
 -- Run with: supabase test db
 --
--- STATUS: authored test-first (TDD). UNVERIFIED — requires Docker + Supabase CLI
--- (`supabase start` / `supabase test db`), which are not yet installed. Expect to
--- fix pgTAP function signatures and the auth.users seed against the real local DB
--- on first run; the *behavior* asserted here is the agreed contract.
+-- STATUS: verified — 12/12 passing via `supabase test db` against local, migration
+-- applied to both local and the linked production project.
 
 begin;
-select plan(11);
+select plan(12);
 
 -- ── Schema shape ────────────────────────────────────────────────────
 select has_table('public', 'users', 'public.users table exists');
@@ -47,13 +45,20 @@ select is(
      where id = '22222222-2222-2222-2222-222222222222')::int,
   0, 'user cannot read another user''s row');
 
--- Decision 2: a user can update their own editable fields (display_name).
+-- Decision 2: a user can update their own editable fields (display_name, avatar_url).
 update public.users set display_name = 'A2'
   where id = '11111111-1111-1111-1111-111111111111';
 select is(
   (select display_name from public.users
      where id = '11111111-1111-1111-1111-111111111111'),
   'A2', 'owner can update their own display_name');
+
+update public.users set avatar_url = 'https://example.dev/a2.png'
+  where id = '11111111-1111-1111-1111-111111111111';
+select is(
+  (select avatar_url from public.users
+     where id = '11111111-1111-1111-1111-111111111111'),
+  'https://example.dev/a2.png', 'owner can update their own avatar_url');
 
 -- Decision 3: a user CANNOT escalate their own role (privilege-escalation guard).
 -- Enforced via column-level REVOKE UPDATE(role) FROM authenticated in the migration,

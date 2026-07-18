@@ -16,6 +16,8 @@ Read before any task touching the database, auth, realtime, or migrations. The c
 - RLS is **on** for every table holding user data. Default-deny; add explicit policies.
 - A user can read/write only their own rows unless a policy deliberately widens it (e.g. a participant reading co-participants in a shared session). Every widening policy gets a comment explaining why it's safe.
 - Write an RLS test for each policy: assert the owner can, and a non-owner cannot. (Phase 1 DoD requires this for `users`.)
+- **RLS policies are not enough on their own.** New tables carry no DML privileges for `anon`/`authenticated` by default (only `REFERENCES`/`TRIGGER`/`TRUNCATE`) — the underlying Postgres `GRANT` must exist, or every query fails with `permission denied` regardless of any policy. Every migration needs explicit grants alongside its policies, e.g. `grant select on public.<table> to authenticated;`.
+- To make one column unwritable while others are (e.g. a user editing their profile but not their own `role`), grant `UPDATE` **column-scoped** (`grant update (display_name, avatar_url) on ... to authenticated;`) rather than table-wide — don't grant table-wide `UPDATE` and try to claw back one column with a column-level `REVOKE`, since a table-wide grant always wins over a column-level revoke in Postgres.
 
 ## Types & client
 - Generate types with `supabase gen types typescript`; treat generated types as authoritative for row shapes (see `typescript-strictness.md`). Regenerate on every schema change.
