@@ -6,7 +6,10 @@ Work through `backlog.md` autonomously, starting at the first unchecked item, ph
 
 ## Preflight (once, before the first task)
 
-1. `git status` — if the tree is dirty, review the diff. If it is coherent completed work (e.g. leftovers from a previous session), commit it as a `checkpoint: pre-run state` commit and push. If it looks half-done or contradictory, stop and ask.
+1. `git status` — if the tree is dirty, review the diff:
+   - Coherent **completed** work (e.g. leftovers from a previous session): commit as `checkpoint: pre-run state` and push.
+   - Clearly an **in-progress attempt at the first unchecked backlog item** (a common state after an interrupted run): resume it through the normal per-item flow — treat existing tests/code as Stage A/B output, review them against docs/DoD exactly as if a subagent had just produced them, fix or finish, verify, close out. If the partial work fails that review, prefer rewriting the affected files over `git checkout --`/`reset` (nothing uncommitted is ever bulk-discarded without asking).
+   - Anything contradictory or unidentifiable: stop and ask.
 2. Verify the toolchain and record what's available: Node, Supabase CLI + Docker (`supabase start` must succeed for DB tasks), `ANDROID_HOME`/`adb`/emulator. A missing tool never crashes the run: tasks whose *verification* needs it proceed and get "(manual QA pending: <tool>)" — but never mark an item `[x]` whose *implementation* (not just verification) needs the missing tool; that item stays unchecked and is reported as skipped.
 3. Memory/8GB note: never run the Android emulator, the full local Supabase stack, and a Gradle build simultaneously if avoidable — sequence heavy verifications and shut down what the current step doesn't need.
 
