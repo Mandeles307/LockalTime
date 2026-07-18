@@ -2,7 +2,7 @@
   "name": "lockal-time",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/server"
   ],
   "devDependencies": {
     "supabase": "^2.109.1"
