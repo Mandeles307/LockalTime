@@ -1,4 +1,5 @@
 import request from 'supertest';
+
 import { createApp } from '../app';
 
 describe('GET /health', () => {

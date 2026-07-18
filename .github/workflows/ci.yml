@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref — keeps the queue clear during
+# autonomous runs that push once per closed task.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: server (lint, typecheck, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24 = active LTS line, matches local dev (v24.18.x).
+          node-version: 24
+          cache: npm
+          # apps/server is an npm workspace of the ROOT lockfile.
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint --workspace apps/server
+      - run: npm run typecheck --workspace apps/server
+      - run: npm test --workspace apps/server
+
+  mobile:
+    name: mobile (lint, typecheck, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # apps/mobile is intentionally OUTSIDE the npm workspaces — it has its
+        # own lockfile and node_modules (React Native tooling requirement).
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  db:
+    name: db (supabase boot + pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      # Installs the supabase CLI pinned by the root lockfile, so CI runs the
+      # exact same CLI version as local dev (see supabase root devDependency).
+      - run: npm ci
+      # Boot only what the pgTAP suite needs; excluded services aren't
+      # exercised by `supabase test db`.
+      - run: npx supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api
+      - run: npx supabase test db

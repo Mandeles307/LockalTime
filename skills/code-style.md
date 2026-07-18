@@ -5,6 +5,8 @@ Read before any coding task. These are binding conventions, not suggestions. If 
 ## Formatting & tooling
 - **Prettier** is the single source of truth for formatting — no hand-formatting debates. Config lives at repo root, inherited by all workspaces.
 - **ESLint** enforces correctness/consistency rules beyond formatting. A task isn't done if `npm run lint` fails.
+- **Per-workspace ESLint wiring** (reference: `apps/server/.eslintrc.js`): eslintrc format on ESLint 8 + `@typescript-eslint` (matching the versions `apps/mobile` pins where packages overlap — `eslint ^8.19.0`, `prettier 2.8.8`), with `plugin:prettier/recommended` so `npm run lint` alone reports formatting violations against the ROOT `.prettierrc` (never a copied per-workspace prettier config). Lint scripts pass `--ext .ts,.js` explicitly.
+- Root `.prettierrc` sets `endOfLine: "auto"`: files are stored LF in git (CI on Linux stays strict), but Windows working trees may materialize CRLF — without `auto`, every line lints as a `Delete ␍` error locally.
 - 2-space indentation, single quotes, trailing commas (multiline), semicolons required. These match the existing `apps/server` files — keep them consistent across `apps/mobile`.
 - Max line length: 100. Let Prettier wrap; don't fight it.
 
