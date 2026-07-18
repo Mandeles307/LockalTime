@@ -1,6 +1,6 @@
 # Lockal Time — Database Schema
 
-Status: planning blueprint, except `users` — implemented (`supabase/migrations/20260718015352_create_users.sql`), migrated to both local and production (`LockalTime`), pgTAP-verified (`supabase/tests/users_test.sql`). This is the consolidated, final-for-now schema reflecting every decision made during architecture planning. Update this file whenever a migration changes the shape of the data — `supabase/migrations/` is the executable source of truth, this file is the human-readable explanation of *why* it looks the way it does.
+Status: planning blueprint, except `users` — implemented (`supabase/migrations/20260718015352_create_users.sql`), migrated to both local and production (`LockalTime`), pgTAP-verified (`supabase/tests/users_test.sql`). The signup trigger (`supabase/migrations/20260718192504_create_users_signup_trigger.sql`) is implemented and pgTAP-verified locally (`supabase/tests/users_trigger_test.sql`); production push pending (done manually by the user per `CLAUDE.md`). This is the consolidated, final-for-now schema reflecting every decision made during architecture planning. Update this file whenever a migration changes the shape of the data — `supabase/migrations/` is the executable source of truth, this file is the human-readable explanation of *why* it looks the way it does.
 
 Note on RLS in production: a table's RLS policies alone don't grant access — Postgres privileges (`GRANT`) must exist too, and new tables get none by default for `anon`/`authenticated`. See `skills/supabase-integration.md` for the pattern (table-wide `SELECT`, column-scoped `UPDATE` to exclude fields like `role`).
 
@@ -27,6 +27,27 @@ create table public.users (
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
+
+-- Signup trigger: GoTrue inserts into auth.users on signup for all three
+-- providers (email OTP, Google/Apple via signInWithIdToken), so an AFTER
+-- INSERT trigger there is the single choke point that guarantees a profile
+-- row always exists. display_name derivation, first non-empty wins:
+--   raw_user_meta_data->>'full_name'  (Google/Apple id-token shape)
+--   → raw_user_meta_data->>'name'     (variant key some providers use)
+--   → email local-part                (email OTP carries no name metadata;
+--                                      user-editable later via the
+--                                      column-scoped UPDATE grant)
+--   → 'user'                          (final guard — display_name is NOT NULL
+--                                      and must never abort the auth insert)
+-- SECURITY DEFINER (owner postgres) because the insert runs under
+-- supabase_auth_admin, which has no privileges on public.users; search_path
+-- is pinned to '' so the definer function can't be hijacked. ON CONFLICT (id)
+-- DO NOTHING so a pre-existing profile row never errors the signup itself.
+create function public.handle_new_user()
+  returns trigger language plpgsql security definer set search_path = '' ...;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
 
 -- ============================================================
 -- VENUES (display label for static/business QR — no geolocation)

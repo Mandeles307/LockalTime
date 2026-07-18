@@ -22,13 +22,13 @@ select is(
   'row-level security is enabled on public.users'
 );
 
--- ── Seed two auth users + profile rows (as service role, RLS bypassed) ──
+-- ── Seed two auth users (as service role, RLS bypassed) ─────────────
+-- The on_auth_user_created trigger (users_trigger_test.sql) auto-creates the
+-- public.users profile rows, so no manual profile insert — it would now hit a
+-- duplicate key. Assertions below never depend on the seeded display_name.
 insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'a@test.dev'),
   ('22222222-2222-2222-2222-222222222222', 'b@test.dev');
-insert into public.users (id, display_name, role) values
-  ('11111111-1111-1111-1111-111111111111', 'User A', 'user'),
-  ('22222222-2222-2222-2222-222222222222', 'User B', 'user');
 
 -- ── Act as User A (authenticated) ───────────────────────────────────
 set local role authenticated;
