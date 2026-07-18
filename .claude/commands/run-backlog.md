@@ -38,6 +38,10 @@ Missing credentials, accounts, hardware, or a Mac are **not** stop conditions �
 
 When a DoD requires a physical device, a Mac (none is currently available — iOS code is authored and contract-tested on this PC, never compiled here), credentials not yet provided, or any other manual step: implement everything implementable, write the manual-QA checklist into `docs/` per `skills/testing-standards.md`, mark the backlog item `[x]` with a "(manual QA pending: <what>)" suffix, and flag it in your report.
 
+## Models
+
+Tier subagents by task risk. Routine items (screens, i18n, CRUD endpoints, config, scaffolding): pass `model: "sonnet"` to the Agent tool. High-stakes items inherit the session's model (omit the override): anything under the Money-Equivalent Logic Rule (points/bonus math), QR signing, RLS policies, native blocker modules, host-migration/concurrency logic. The session itself should be started on the strongest available model — its review gates are the run's quality ceiling.
+
 ## Reporting
 
 After each closed item: one or two sentences — what shipped, suite status, what's next. When the session ends or you're blocked: summarize which items closed, which are manual-QA pending, and the exact question(s) blocking you.

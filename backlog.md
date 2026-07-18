@@ -17,7 +17,7 @@ Prerequisites: none.
 ## Phase 1 — Auth & Onboarding (Screens 1–3)
 Prerequisites: Phase 0.
 
-- [ ] i18n + RTL foundation: en + he locales, RTL-safe layout conventions, no hardcoded UI strings (decided in CLAUDE.md — both languages from day one)
+- [x] i18n + RTL foundation: en + he locales, RTL-safe layout conventions, no hardcoded UI strings (decided in CLAUDE.md — both languages from day one) — react-i18next + react-native-localize behind `src/i18n/`, typed locale modules with compile-time + runtime key parity, `i18next/no-literal-string` lint rule, conventions in `skills/i18n.md` (manual QA pending: on-device en↔he switch — `forceRTL` applies on next app start; see docs/MANUAL_QA.md)
 - [ ] Supabase Auth wiring: email first (fully tested); Google + Apple wired against placeholder config, "manual QA pending" until real credentials (per CLAUDE.md decision)
 - [ ] `users` row auto-created via trigger on signup
 - [ ] Onboarding carousel (Screen 1)
