@@ -21,8 +21,14 @@ Read before any task touching the database, auth, realtime, or migrations. The c
 
 ## Types & client
 - Generate types with `supabase gen types typescript`; treat generated types as authoritative for row shapes (see `typescript-strictness.md`). Regenerate on every schema change.
-- One shared `supabaseClient.ts` per app (`apps/mobile/src/services/`). Never scatter client construction.
-- Service-role keys live only on the Node server, never in the mobile app or any client-reachable place. The mobile app uses the anon key + user session only.
+- One shared client module per app (`apps/mobile/src/services/supabase-client.ts`, kebab-case per `code-style.md`), exposing a lazily-memoized `getSupabaseClient()`. Never scatter client construction; on React Native the client is constructed with AsyncStorage-backed `persistSession`, `autoRefreshToken: true`, `detectSessionInUrl: false`.
+- Service-role keys live only on the Node server, never in the mobile app or any client-reachable place. The mobile app uses the anon key + user session only — `supabase-config.test.ts` enforces this by decoding the shipped key's JWT and asserting `role: 'anon'`.
+
+## Auth service boundary (mobile)
+- Screens never call `supabase.auth.*` directly: all auth flows go through `apps/mobile/src/services/auth-service.ts`, which wraps the shared client.
+- Service functions return a discriminated `AuthResult<T>` (`{ ok: true; value } | { ok: false; error: AuthFailure }`) and **never throw** — Supabase `{ data, error }` responses and thrown unknowns are both normalized into typed failures at this boundary. Reuse this result pattern for any future client-side service that fronts an external SDK.
+- `AuthFailure.message` is diagnostic text for logs, never rendered — screens map failure kinds/statuses to i18n keys.
+- Auth state lives in the Zustand `auth-store` as a discriminated union; `attachAuthStateListener()` (attached/detached by the App bootstrap) is the only client-driven writer of auth state.
 
 ## Realtime specifics
 - Per-session channel naming: `session:{session_id}` (`ARCHITECTURE.md` §5).

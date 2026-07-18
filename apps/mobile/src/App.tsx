@@ -9,6 +9,7 @@ import { initI18n } from './i18n/init-i18n';
 import type { SupportedLocale } from './i18n/resolve-device-locale';
 import { syncLayoutDirection } from './i18n/sync-layout-direction';
 import HomeScreen from './screens/HomeScreen';
+import { attachAuthStateListener } from './state/auth-store';
 
 // Testable app factory (the runtime shell is index.js, which only registers
 // this component) — mirrors the app.ts/server.ts split in apps/server.
@@ -23,6 +24,10 @@ const App = (): React.JSX.Element | null => {
 
   useEffect(() => {
     let isMounted = true;
+    // Attach before anything renders so cold-start session hydration
+    // (INITIAL_SESSION from AsyncStorage) lands in the auth store; detached
+    // in cleanup so remounts never leak listeners.
+    const detachAuthListener = attachAuthStateListener();
 
     initI18n().then((instance) => {
       // initI18n only ever resolves to a supported language, so narrowing by
@@ -36,6 +41,7 @@ const App = (): React.JSX.Element | null => {
 
     return () => {
       isMounted = false;
+      detachAuthListener();
     };
   }, []);
 
