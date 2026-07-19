@@ -91,20 +91,19 @@ const mockVerifyOtp = jest.fn<Promise<SessionResponseStub>, [unknown]>();
 const mockSignInWithIdToken = jest.fn<Promise<SessionResponseStub>, [unknown]>();
 const mockSignOut = jest.fn<Promise<SignOutResponseStub>, []>();
 
-jest.mock(
-  './supabase-client',
-  () => ({
-    getSupabaseClient: () => ({
-      auth: {
-        signInWithIdToken: (params: unknown) => mockSignInWithIdToken(params),
-        signInWithOtp: (params: unknown) => mockSignInWithOtp(params),
-        signOut: () => mockSignOut(),
-        verifyOtp: (params: unknown) => mockVerifyOtp(params),
-      },
-    }),
+// Not a virtual mock: the module exists since the auth wiring landed, and a
+// virtual mock of an existing module resolves unreliably across shared jest
+// workers (observed: the real module loads and drags untranspiled ESM in).
+jest.mock('./supabase-client', () => ({
+  getSupabaseClient: () => ({
+    auth: {
+      signInWithIdToken: (params: unknown) => mockSignInWithIdToken(params),
+      signInWithOtp: (params: unknown) => mockSignInWithOtp(params),
+      signOut: () => mockSignOut(),
+      verifyOtp: (params: unknown) => mockVerifyOtp(params),
+    },
   }),
-  { virtual: true },
-);
+}));
 
 beforeEach(() => {
   mockSignInWithOtp.mockReset();

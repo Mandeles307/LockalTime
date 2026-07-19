@@ -44,6 +44,14 @@ import { en } from './i18n/locales/en';
 // The blocking-permissions service module is mocked virtually (Stage B), so
 // pressing the screen's real CTAs here proves the full chain App -> screen ->
 // service -> onHandled -> permission store, both sides.
+//
+// Phase 1 auth gating (Screen 3): this suite's default user is now SIGNED IN
+// — the onAuthStateChange mock delivers INITIAL_SESSION with a persisted
+// session on attach, exactly as supabase-js does on a cold start with a
+// stored session. That keeps every Home assertion below pinning the
+// authenticated bootstrap unchanged once the auth gate lands; the
+// unauthenticated side (AuthScreen shown, verify success reaching Home) is
+// owned by App.auth-gate.spec.tsx.
 
 interface DeviceLocaleStub {
   readonly countryCode: string;
@@ -75,26 +83,42 @@ interface OnAuthStateChangeReturnStub {
   readonly data: { readonly subscription: { readonly unsubscribe: () => void } };
 }
 
+// The raw supabase-js session shape delivered to auth listeners; mapped by
+// the real toAuthSession (pinned in auth-service.test.ts / auth-store.test.ts).
+const RAW_SESSION = {
+  access_token: 'access-token-1',
+  expires_in: 3600,
+  refresh_token: 'refresh-token-1',
+  token_type: 'bearer',
+  user: { email: 'dana@example.com', id: '5f0c3a52-7c46-4c1f-9d0e-2a9346f2b70e' },
+};
+
 const mockUnsubscribe = jest.fn<void, []>();
 
 const mockOnAuthStateChange = jest.fn<OnAuthStateChangeReturnStub, [AuthChangeCallbackStub]>(
-  () => ({ data: { subscription: { unsubscribe: () => mockUnsubscribe() } } }),
+  (callback) => {
+    // supabase-js always fires INITIAL_SESSION on attach; delivering a
+    // persisted session makes this suite's default a signed-in returning user
+    // (cold-start hydration from AsyncStorage), so the auth gate keeps every
+    // Home assertion below unchanged. The unauthenticated side lives in
+    // App.auth-gate.spec.tsx.
+    callback('INITIAL_SESSION', RAW_SESSION);
+    return { data: { subscription: { unsubscribe: () => mockUnsubscribe() } } };
+  },
 );
 
 // Mocking the shared client module (not @supabase/supabase-js) intercepts the
 // whole transitive import chain App pulls in via the auth wiring, so the
-// uninstalled SDK/AsyncStorage packages are never loaded by this suite.
-jest.mock(
-  './services/supabase-client',
-  () => ({
-    getSupabaseClient: () => ({
-      auth: {
-        onAuthStateChange: (callback: AuthChangeCallbackStub) => mockOnAuthStateChange(callback),
-      },
-    }),
+// SDK/AsyncStorage packages' untranspiled ESM is never loaded by this suite.
+// Not virtual: the module exists, and a virtual mock of an existing module
+// resolves unreliably across shared jest workers.
+jest.mock('./services/supabase-client', () => ({
+  getSupabaseClient: () => ({
+    auth: {
+      onAuthStateChange: (callback: AuthChangeCallbackStub) => mockOnAuthStateChange(callback),
+    },
   }),
-  { virtual: true },
-);
+}));
 
 const mockGetItem = jest.fn<Promise<string | null>, [string]>();
 const mockRemoveItem = jest.fn<Promise<void>, [string]>();

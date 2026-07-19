@@ -63,7 +63,16 @@ jobs:
       # Installs the supabase CLI pinned by the root lockfile, so CI runs the
       # exact same CLI version as local dev (see supabase root devDependency).
       - run: npm ci
-      # Boot only what the pgTAP suite needs; excluded services aren't
-      # exercised by `supabase test db`.
-      - run: npx supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api
+      # Boot what the pgTAP suite and the email-OTP integration test need;
+      # Mailpit stays up because the integration test reads the OTP email
+      # from its HTTP API.
+      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api
       - run: npx supabase test db
+      # Real email-OTP signup flow against the stack just booted (request ->
+      # Mailpit -> verify -> trigger-created profile row). apps/mobile owns
+      # its own lockfile outside the workspaces; uncached install keeps this
+      # job simple.
+      - run: npm ci
+        working-directory: apps/mobile
+      - run: npm run test:integration
+        working-directory: apps/mobile

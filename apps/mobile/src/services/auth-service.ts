@@ -22,7 +22,7 @@ export interface AuthSession {
 }
 
 export interface AuthFailure {
-  readonly kind: 'auth_error' | 'unexpected';
+  readonly kind: 'auth_error' | 'provider_email_conflict' | 'unexpected';
   readonly message: string;
   readonly status?: number;
 }
@@ -63,12 +63,30 @@ const unexpectedFailure = (thrown: unknown): AuthFailure => {
   return { kind: 'unexpected', message: 'Unknown auth failure' };
 };
 
+// GoTrue identity-collision codes on an ID-token exchange: the email already
+// belongs to an account under another provider. The machine-readable `code`
+// is the discriminator (message text varies by server version; bare 422s
+// also cover unrelated validation rejections). All three documented codes
+// map because placeholder provider config means the exact live code per
+// scenario is manual QA pending (docs/MANUAL_QA.md). Contract pinned in
+// auth-service.account-linking.test.ts.
+const IDENTITY_COLLISION_CODES: ReadonlySet<string> = new Set([
+  'email_exists',
+  'user_already_exists',
+  'identity_already_exists',
+]);
+
 const exchangeIdToken = async (
   credentials: SignInWithIdTokenCredentials,
 ): Promise<AuthResult<AuthSession>> => {
   try {
     const { data, error } = await getSupabaseClient().auth.signInWithIdToken(credentials);
     if (error !== null) {
+      if (error.code !== undefined && IDENTITY_COLLISION_CODES.has(error.code)) {
+        const failure = authFailure(error.message, error.status);
+        // The account-linking dialog (Screen 3) keys off this kind alone.
+        return { ok: false, error: { ...failure, kind: 'provider_email_conflict' } };
+      }
       return { ok: false, error: authFailure(error.message, error.status) };
     }
     if (data.session === null) {

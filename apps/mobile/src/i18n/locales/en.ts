@@ -44,6 +44,42 @@ export const en = {
       proceedAnyway: 'Continue without blocking',
     },
   },
+  // Auth copy (Screen 3) is PLACEHOLDER, flagged for the deferred copy pass.
+  // Error strings are user-facing copy keyed off AuthFailure.kind only — the
+  // failure's diagnostic message is never rendered
+  // (.claude/skills/supabase-integration/SKILL.md).
+  auth: {
+    title: 'Sign in to Lockal Time',
+    emailEntry: {
+      placeholder: 'Your email address',
+      continue: 'Continue',
+      errors: {
+        requestFailed: "We couldn't send a code to that address. Please try again.",
+      },
+    },
+    codeEntry: {
+      title: 'Check your email',
+      body: 'We sent a 6-digit code to your address. Enter it here to sign in.',
+      verify: 'Verify',
+      errors: {
+        invalidCode: "That code isn't right or has expired. Check it and try again.",
+      },
+    },
+    errors: {
+      network: "Something went wrong reaching the server. Check your connection and try again.",
+    },
+    providers: {
+      google: 'Continue with Google',
+      apple: 'Continue with Apple',
+      unavailable: 'This sign-in option is not available yet. Please continue with email.',
+      error: "That sign-in didn't work. Please try again or continue with email.",
+    },
+    accountLinking: {
+      title: 'You already have an account',
+      body: 'This email is already registered with a different sign-in method. Sign in with your email to keep everything in one account.',
+      useEmail: 'Sign in with email',
+    },
+  },
 };
 
 export type TranslationSchema = typeof en;

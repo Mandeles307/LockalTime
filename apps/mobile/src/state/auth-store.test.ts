@@ -68,17 +68,16 @@ const mockOnAuthStateChange = jest.fn<OnAuthStateChangeReturnStub, [AuthChangeCa
   },
 );
 
-jest.mock(
-  '../services/supabase-client',
-  () => ({
-    getSupabaseClient: () => ({
-      auth: {
-        onAuthStateChange: (callback: AuthChangeCallbackStub) => mockOnAuthStateChange(callback),
-      },
-    }),
+// Not a virtual mock: the module exists since the auth wiring landed, and a
+// virtual mock of an existing module resolves unreliably across shared jest
+// workers (observed: the real module loads and drags untranspiled ESM in).
+jest.mock('../services/supabase-client', () => ({
+  getSupabaseClient: () => ({
+    auth: {
+      onAuthStateChange: (callback: AuthChangeCallbackStub) => mockOnAuthStateChange(callback),
+    },
   }),
-  { virtual: true },
-);
+}));
 
 const emitAuthEvent = (event: string, session: RawSessionStub | null): void => {
   if (capturedCallback === undefined) {

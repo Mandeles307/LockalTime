@@ -8,10 +8,11 @@ import { I18nProvider } from './i18n/I18nProvider';
 import { initI18n } from './i18n/init-i18n';
 import type { SupportedLocale } from './i18n/resolve-device-locale';
 import { syncLayoutDirection } from './i18n/sync-layout-direction';
+import AuthScreen from './screens/AuthScreen';
 import HomeScreen from './screens/HomeScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import PermissionPrimingScreen from './screens/PermissionPrimingScreen';
-import { attachAuthStateListener } from './state/auth-store';
+import { attachAuthStateListener, useAuthStore } from './state/auth-store';
 import { hydrateOnboardingStatus, markOnboardingSeen, useOnboardingStore } from './state/onboarding-store';
 import {
   hydratePermissionStepStatus,
@@ -47,6 +48,7 @@ const App = (): React.JSX.Element | null => {
   const [i18nInstance, setI18nInstance] = useState<I18nInstance | null>(null);
   const onboarding = useOnboardingStore((state) => state.onboarding);
   const permissionStep = usePermissionStore((state) => state.permissionStep);
+  const auth = useAuthStore((state) => state.auth);
 
   useEffect(() => {
     let isMounted = true;
@@ -107,6 +109,21 @@ const App = (): React.JSX.Element | null => {
     return (
       <I18nProvider i18n={i18nInstance}>
         <PermissionPrimingScreen onHandled={handlePermissionHandled} />
+      </I18nProvider>
+    );
+  }
+
+  if (auth.status === 'unauthenticated') {
+    // Screen 3, after both first-launch gates (ARCHITECTURE.md §2 order:
+    // Onboarding -> Permission -> Auth -> Home). The screen never completes
+    // itself: a successful sign-in fires SIGNED_IN, the auth store flips via
+    // attachAuthStateListener, and this gate re-renders onto the navigator
+    // (pinned in App.auth-gate.spec.tsx). Cold-start hydration lands as
+    // INITIAL_SESSION with the persisted session, so a signed-in returning
+    // user passes straight through.
+    return (
+      <I18nProvider i18n={i18nInstance}>
+        <AuthScreen />
       </I18nProvider>
     );
   }

@@ -5,4 +5,8 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|@react-navigation|react-native-screens|react-native-safe-area-context|react-native-is-edge-to-edge)/)',
   ],
+  // integration/ hits the real local Supabase stack — run it explicitly via
+  // `npm run test:integration` (jest.integration.config.js), never as part of
+  // the default unit suite.
+  testPathIgnorePatterns: ['/node_modules/', '/integration/'],
 };
