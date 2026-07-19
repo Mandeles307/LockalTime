@@ -20,7 +20,7 @@ Prerequisites: Phase 0.
 - [x] i18n + RTL foundation: en + he locales, RTL-safe layout conventions, no hardcoded UI strings (decided in CLAUDE.md — both languages from day one) — react-i18next + react-native-localize behind `src/i18n/`, typed locale modules with compile-time + runtime key parity, `i18next/no-literal-string` lint rule, conventions in `skills/i18n.md` (manual QA pending: on-device en↔he switch — `forceRTL` applies on next app start; see docs/MANUAL_QA.md)
 - [x] Supabase Auth wiring: email first (fully tested); Google + Apple wired against placeholder config, "manual QA pending" until real credentials (per CLAUDE.md decision) — supabase-js client + email-OTP auth service + discriminated-union auth store wired into App bootstrap, config.toml Google/Apple placeholder blocks (manual QA pending: real OAuth credentials + native SDKs, end-to-end OTP flow — see docs/MANUAL_QA.md)
 - [x] `users` row auto-created via trigger on signup — `handle_new_user()` SECURITY DEFINER trigger on `auth.users` (full_name → name → email local-part → 'user' fallback, ON CONFLICT DO NOTHING), pgTAP 26/26 locally; production push pending (manual, per CLAUDE.md)
-- [ ] Onboarding carousel (Screen 1)
+- [x] Onboarding carousel (Screen 1) — 3-page FlatList carousel per DESIGN_GUIDELINES §9 (skip/Next/Get Started, dots, token sizing), design-token module `src/theme/tokens.ts` established, first-launch AsyncStorage gating in App; placeholder en+he copy flagged for the copy pass (manual QA pending: on-device RTL swipe/paging — see docs/MANUAL_QA.md)
 - [ ] Permission-priming screen copy/logic (Screen 2) — including the denied-permission fallback state
 - [ ] Auth error states: wrong OTP, network failure, OAuth account-linking dialog
 

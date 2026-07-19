@@ -13,6 +13,10 @@ Items that cannot be verified on this development machine (no Android SDK platfo
 - [ ] **Back to English** — switch device language back to English, two cold starts: layout returns to LTR, English strings shown.
 - [ ] **Unsupported RTL locale** — set device language to Arabic (unsupported): app must fall back to English **in LTR layout** (the `allowRTL(isRtl)` guard — an unsupported-RTL device must not get a mirrored layout under English strings).
 
+## Phase 1 — Onboarding carousel (Screen 1)
+
+- [ ] **RTL carousel behavior on-device (Hebrew)** — with device language set to עברית (two cold starts, per the `forceRTL` note above), on a fresh install (or after clearing app storage so the onboarding-seen flag is unset): the first page appears on the right and swiping **left-to-right** advances through the three pages in order; pagination dots are mirrored (active dot progresses right-to-left) and always match the visible page — including after pressing «הבא» (Next); skip sits at the visual top-left (the `end` edge). Not JS-testable: `I18nManager` is inert under Jest, and the paging math relies on native RTL scroll-offset semantics (iOS reports negative offsets; the JS side only sees `Math.abs`).
+
 ## Phase 1 — Supabase Auth wiring
 
 - [ ] **End-to-end email OTP against the local stack** — with `supabase start` running (full stack, Mailpit included): call `requestEmailOtp` with a fresh address, read the 6-digit code from the Mailpit web UI at http://127.0.0.1:54324, call `verifyEmailOtp`, confirm an authenticated session; then cold-restart the app and confirm the session was rehydrated from AsyncStorage (auth store authenticated without a new login). Note: local `[auth.rate_limit] email_sent = 2`/hour — repeated runs need a stack restart or a temporary limit bump. *This entry graduates to a real node-env integration test alongside the "Auth error states" backlog item (the unit suites pin the supabase-js call contract until then; the `users`-trigger pgTAP suite covers real signup at the DB level).*
