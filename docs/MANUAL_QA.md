@@ -1,5 +1,10 @@
 # Manual QA Checklist
 
+## Production setup — outstanding
+
+- [ ] **Magic Link email template must include `{{ .Token }}`** — production dashboard (`LockalTime` project) → Authentication → Emails → Magic Link. The default template sends only a sign-in link, but the app's Screen 3 asks for a 6-digit code — without `{{ .Token }}` in the template body, production email sign-in dead-ends. Suggested body (mirrors `supabase/templates/magic_link.html`, which fixes this for the local stack only — local config never syncs to prod): `<h2>Your sign-in code</h2><p>Enter this code in the app to sign in:</p><h1>{{ .Token }}</h1>`. Equivalent API route: `PATCH https://api.supabase.com/v1/projects/<ref>/config/auth` with `mailer_subjects_magic_link` + `mailer_templates_magic_link_content`. Do **not** use `supabase config push` — it would sync the whole local auth config, including placeholder Google/Apple provider blocks and dev rate limits.
+- Note: the schema itself is current — both migrations (`users`, signup trigger) are pushed to production and verified (2026-07-19).
+
 Items that cannot be verified on this development machine (no Android SDK platforms installed, no Mac, no physical devices) or that are inherently manual. Per `.claude/skills/testing-standards/SKILL.md`, each backlog item marked "(manual QA pending: …)" points here. Check items off when performed on real hardware; a checked backlog item with a pending entry here is implemented and JS-verified but not device-verified.
 
 ## Phase 0 — React Native app init
