@@ -1,4 +1,7 @@
-# Skill: TypeScript Strictness
+---
+name: typescript-strictness
+description: Strict TypeScript rules (no any, no unchecked assertions, boundary validation, domain modeling) for this repo's money-equivalent logic. Read before any coding task.
+---
 
 Read before any coding task. The bar is high on purpose — this app handles money-equivalent logic (points/bonuses) where a silent type coercion is a real bug, not a cosmetic one.
 

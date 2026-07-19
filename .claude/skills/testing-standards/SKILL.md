@@ -1,4 +1,7 @@
-# Skill: Testing Standards
+---
+name: testing-standards
+description: TDD protocol, test types, coverage bar, and determinism rules. Read before any coding task and before writing any test.
+---
 
 Read before any coding task. TDD is a hard rule in this project (`CLAUDE.md` working contract): the test file exists and is agreed correct **before** implementation code is written.
 

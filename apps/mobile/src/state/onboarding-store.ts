@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 // Phase 1 first-launch gating (Screen 1), mirroring the Zustand pattern
 // proven in app-store.ts. The gate is a discriminated union
-// (skills/typescript-strictness.md): App cannot read a seen/unseen answer
+// (.claude/skills/typescript-strictness/SKILL.md): App cannot read a seen/unseen answer
 // before AsyncStorage has actually been consulted, so a cold start can never
 // flash the wrong screen.
 //

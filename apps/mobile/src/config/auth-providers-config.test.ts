@@ -8,7 +8,7 @@ import { resolve } from 'path';
 // not a TOML parser: it reads the committed config and asserts the exact
 // key = value lines inside each section, so a drive-by edit that disables a
 // provider or the local OTP flow fails the mobile suite. It reads a repo
-// file, never the network — determinism rule, skills/testing-standards.md.
+// file, never the network — determinism rule, .claude/skills/testing-standards/SKILL.md.
 
 const CONFIG_PATH = resolve(__dirname, '..', '..', '..', '..', 'supabase', 'config.toml');
 

@@ -3,7 +3,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase-config';
 // Phase 1 auth wiring: the mobile app gets exactly one typed config module for
 // Supabase connection values. The local stack's demo URL + anon key are
 // standard public values, safe to commit for dev. The contract pinned here is
-// a trust-boundary guard from skills/supabase-integration.md: the mobile app
+// a trust-boundary guard from .claude/skills/supabase-integration/SKILL.md: the mobile app
 // ships the ANON key only — the service-role key must never reach a client.
 
 // Decodes a JWT payload for inspection. Test-only helper: it does not verify

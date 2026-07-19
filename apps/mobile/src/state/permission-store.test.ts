@@ -20,7 +20,7 @@ import {
 // the money rule, applied to capability state).
 //
 // State is a discriminated union (hydrating | ready) per
-// skills/typescript-strictness.md, so the gate cannot read an answer before
+// .claude/skills/typescript-strictness/SKILL.md, so the gate cannot read an answer before
 // AsyncStorage has actually been consulted. Failure policy: fail open —
 // a storage read failure hydrates as unhandled and a persistence failure
 // still marks handled in-memory; the worst case is one repeat of a skippable

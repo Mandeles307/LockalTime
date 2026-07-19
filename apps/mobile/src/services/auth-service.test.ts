@@ -17,14 +17,14 @@ import {
 //   placeholder-only, so these tests pin the call contract only; the real
 //   credential flow is manual QA pending (per CLAUDE.md decision).
 // - Every function returns a discriminated AuthResult — never throws, no
-//   `any`, unknown rejections narrowed (skills/typescript-strictness.md).
+//   `any`, unknown rejections narrowed (.claude/skills/typescript-strictness/SKILL.md).
 //   AuthFailure.message is diagnostic text for logs/debugging, never rendered
 //   directly; the auth-error-states backlog item maps failures to i18n keys.
 //
 // The service must go through the shared client module (getSupabaseClient) —
 // the module is mocked here (virtually; it does not exist until Stage B), so
 // an implementation constructing its own client fails these tests. No test
-// touches the network; determinism rule, skills/testing-standards.md.
+// touches the network; determinism rule, .claude/skills/testing-standards/SKILL.md.
 
 interface RawUserStub {
   readonly email?: string;

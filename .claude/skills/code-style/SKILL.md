@@ -1,4 +1,7 @@
-# Skill: Code Style
+---
+name: code-style
+description: Formatting, naming, file organization, import order, and comment conventions for this repo. Read before writing any code.
+---
 
 Read before any coding task. These are binding conventions, not suggestions. If a task needs a rule not covered here, add it here in the same turn rather than deciding ad hoc.
 

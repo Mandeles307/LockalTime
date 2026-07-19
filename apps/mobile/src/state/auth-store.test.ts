@@ -2,7 +2,7 @@ import { attachAuthStateListener, useAuthStore } from './auth-store';
 
 // Phase 1 auth state store, mirroring the Zustand pattern proven in
 // app-store.ts. Auth state is a discriminated union (unauthenticated |
-// authenticated + session) per skills/typescript-strictness.md — never a bag
+// authenticated + session) per .claude/skills/typescript-strictness/SKILL.md — never a bag
 // of booleans, and a cleared store cannot carry a stale session.
 //
 // attachAuthStateListener is the wiring between the shared Supabase client

@@ -8,7 +8,7 @@ import {
 // Phase 1 first-launch gating store (Screen 1). Pins the contract App's gate
 // relies on: unseen -> onboarding, seen -> home, completing/skipping marks
 // seen (App.spec.tsx asserts the rendering side). State is a discriminated
-// union (hydrating | ready) per skills/typescript-strictness.md, so the gate
+// union (hydrating | ready) per .claude/skills/typescript-strictness/SKILL.md, so the gate
 // cannot read a seen/unseen answer before AsyncStorage has actually been
 // consulted — a boolean default here would flash the wrong screen on cold
 // start.

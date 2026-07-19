@@ -13,7 +13,7 @@ import { blockingPermissions } from './blocking-permissions';
 //   'undetermined'. One combined status for the blocking capability as a
 //   whole — per-platform nuance (Android's two separate grants) stays inside
 //   the future native module, which reports the weakest link
-//   (skills/testing-standards.md native-modules rule: JS-side contract test
+//   (.claude/skills/testing-standards/SKILL.md native-modules rule: JS-side contract test
 //   over a mocked/absent bridge; real OS behavior is manual QA in Phase 3).
 // - The Phase 1 implementation is a pure-JS placeholder, deterministic by
 //   design: getStatus() always resolves 'undetermined' (nothing native exists

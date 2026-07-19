@@ -31,7 +31,7 @@ import OnboardingScreen from './OnboardingScreen';
 //   minTouchTarget minimum (48). Tokens, never ad-hoc values.
 //
 // RTL: styles must use logical properties and never branch on locale
-// (skills/i18n.md) — the he render below proves the copy path; RN flips the
+// (.claude/skills/i18n/SKILL.md) — the he render below proves the copy path; RN flips the
 // horizontal list natively. Actual RTL swipe/paging direction on-device is
 // not JS-testable (I18nManager is inert under Jest) and goes on the manual QA
 // checklist (docs/MANUAL_QA.md) in Stage B.

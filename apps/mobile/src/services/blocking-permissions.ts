@@ -5,7 +5,7 @@
 // Those land with the Phase 3 native bridge — this module is the SEAM: the
 // screen codes against this surface only, so Phase 3 swaps the implementation
 // below for the real native module without touching the screen
-// (blocking-permissions.test.ts pins the surface; skills/testing-standards.md
+// (blocking-permissions.test.ts pins the surface; .claude/skills/testing-standards/SKILL.md
 // native-modules rule).
 //
 // PHASE 1 PLACEHOLDER, deliberately deterministic pure JS:

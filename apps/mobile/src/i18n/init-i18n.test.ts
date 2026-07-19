@@ -7,7 +7,7 @@ import { he } from './locales/he';
 // starting in the locale resolved from the device's language preferences and
 // falling back to en. react-native-localize is a native module and is mocked
 // virtually (it is not installed until Stage B) so no test ever reads the
-// machine's real locale — determinism rule, skills/testing-standards.md.
+// machine's real locale — determinism rule, .claude/skills/testing-standards/SKILL.md.
 
 interface DeviceLocaleStub {
   readonly countryCode: string;
@@ -106,7 +106,7 @@ describe('initI18n', () => {
   it('returns an isolated instance per call, re-detecting the device locale', async () => {
     // No shared singleton: a second init must not mutate the first instance,
     // and must re-read the (mocked) device preferences. This keeps the
-    // testable core free of module-level state per skills/code-style.md.
+    // testable core free of module-level state per .claude/skills/code-style/SKILL.md.
     const first = await initI18n();
     mockGetLocales.mockReturnValue([HE_IL]);
 

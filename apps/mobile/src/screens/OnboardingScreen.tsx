@@ -21,7 +21,7 @@ import { radius, sizing, spacing, typography } from '../theme/tokens';
 // CTA); the App gate owns what completion means. All copy flows through t()
 // (placeholder, flagged in the locale bundles); styling is token-based,
 // neutral grayscale only (palette deferred), and direction-neutral per
-// skills/i18n.md — RN mirrors the row layouts and the horizontal list under
+// .claude/skills/i18n/SKILL.md — RN mirrors the row layouts and the horizontal list under
 // RTL natively (on-device RTL paging is a manual QA item, docs/MANUAL_QA.md).
 
 const PAGE_KEYS = ['valueProposition', 'howSessionsWork', 'whyPermissionsMatter'] as const;

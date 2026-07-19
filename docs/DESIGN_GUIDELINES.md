@@ -2,7 +2,7 @@
 
 Status: structural design system, pre-implementation. Purpose: keep every screen built across separate phases/sessions looking like one coherent product, not a patchwork of one-off decisions. **Color palette is intentionally deferred** — this doc governs sizing, shape, motion, and haptic consistency only; colors get their own pass later.
 
-Read this before starting any screen-building task, the same way `skills/` conventions get read before other code tasks.
+Read this before starting any screen-building task, the same way `.claude/skills/` conventions get read before other code tasks.
 
 **Sourcing note:** Instagram, TikTok, and Facebook have never published an official public design system (unlike Apple's Human Interface Guidelines or Google's Material Design) — there is nothing legitimate to "copy" from them. Where this doc aims for the same *appeal/polish* those apps achieve, it draws instead on Apple's actual, public HIG plus credible published UX research on what makes onboarding and micro-interactions feel good — not on those three apps' specific (and largely undocumented) engagement mechanics.
 

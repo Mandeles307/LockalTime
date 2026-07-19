@@ -5,7 +5,7 @@ import { toAuthSession } from '../services/auth-service';
 import { getSupabaseClient } from '../services/supabase-client';
 
 // Phase 1 auth state, mirroring the Zustand pattern proven in app-store.ts.
-// Auth is a discriminated union (skills/typescript-strictness.md) so a
+// Auth is a discriminated union (.claude/skills/typescript-strictness/SKILL.md) so a
 // cleared store cannot carry a stale session.
 
 export type AuthStatus =

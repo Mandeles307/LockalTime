@@ -20,7 +20,7 @@ import { radius, sizing, spacing, typography } from '../theme/tokens';
 // onHandled (granted result or proceed-anyway); the App gate owns persistence
 // and what handling means. All copy flows through t() (placeholder, flagged
 // in the locale bundles); styling is token-based, neutral grayscale only
-// (palette deferred), and direction-neutral per skills/i18n.md.
+// (palette deferred), and direction-neutral per .claude/skills/i18n/SKILL.md.
 
 interface PermissionPrimingScreenProps {
   readonly onHandled: () => void;

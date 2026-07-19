@@ -1,4 +1,7 @@
-# Skill: i18n & RTL
+---
+name: i18n
+description: i18next/RTL stack, no-hardcoded-strings rule, typed locale parity, and RTL-safe layout rules. Read before building any screen or adding user-visible text.
+---
 
 Read before building any screen or adding any user-visible string. English + Hebrew from day one, full RTL support, no hardcoded UI strings — all three are locked decisions (`CLAUDE.md`); the enforcement layers below make them permanent.
 
@@ -39,6 +42,6 @@ Binding for every style and layout, from the first line of any new screen:
 
 ## Testing conventions
 
-- Mock `react-native-localize` (`jest.mock('react-native-localize', ...)`) in every suite that touches i18n init — no test may read the machine's real locale (determinism rule, `skills/testing-standards.md`).
+- Mock `react-native-localize` (`jest.mock('react-native-localize', ...)`) in every suite that touches i18n init — no test may read the machine's real locale (determinism rule, [[testing-standards]]).
 - Component specs assert against the locale modules (`en.home.title`), never re-typed string literals, so copy edits don't break specs.
 - Spy on `I18nManager` methods in any suite that renders `App` so tests can't mutate real layout state.

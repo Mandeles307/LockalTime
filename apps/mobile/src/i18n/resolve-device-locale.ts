@@ -2,7 +2,7 @@
 // preferences (the shape react-native-localize's getLocales() reports) onto
 // a supported app locale. Kept side-effect free — the actual getLocales()
 // call happens in init-i18n — so this stays unit-testable with no native
-// module (skills/code-style.md: testable core vs. runtime shell).
+// module (.claude/skills/code-style/SKILL.md: testable core vs. runtime shell).
 
 // Structural minimum of react-native-localize's Locale: the resolver keys off
 // languageCode only, so region subtags (he-IL vs. he) never affect selection.

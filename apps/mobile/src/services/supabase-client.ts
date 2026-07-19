@@ -5,8 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config/supabase-config';
 
 // The app's single shared Supabase client — never scatter client construction
-// (skills/supabase-integration.md). Memoized lazily so importing this module
-// has no side effects (skills/code-style.md: testable core vs runtime shell).
+// (.claude/skills/supabase-integration/SKILL.md). Memoized lazily so importing this module
+// has no side effects (.claude/skills/code-style/SKILL.md: testable core vs runtime shell).
 let memoizedClient: SupabaseClient | null = null;
 
 export const getSupabaseClient = (): SupabaseClient => {

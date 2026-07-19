@@ -5,7 +5,7 @@ import { resolveDeviceLocale, type DeviceLocalePreference } from './resolve-devi
 // react-native-localize's getLocales() reports) onto a supported app locale.
 // It is deliberately a pure function — the actual getLocales() call lives in
 // init-i18n — so these cases run with no native module and never depend on
-// the test machine's real locale (determinism rule, skills/testing-standards.md).
+// the test machine's real locale (determinism rule, .claude/skills/testing-standards/SKILL.md).
 // It deliberately keys off languageCode only: region subtags (he-IL, en-GB)
 // must not affect which bundle loads.
 describe('resolveDeviceLocale', () => {

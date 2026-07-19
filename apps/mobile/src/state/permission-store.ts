@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 // Phase 1 permission-step gating (Screen 2), mirroring the onboarding-store
 // pattern. The gate is a discriminated union
-// (skills/typescript-strictness.md): App cannot read a handled/unhandled
+// (.claude/skills/typescript-strictness/SKILL.md): App cannot read a handled/unhandled
 // answer before AsyncStorage has actually been consulted, so a cold start can
 // never flash the wrong screen.
 //

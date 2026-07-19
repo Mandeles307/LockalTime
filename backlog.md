@@ -5,19 +5,19 @@ Tracked per our working contract: one atomic task at a time, test-first, this fi
 ## Phase 0 — Bootstrap
 Prerequisites: none.
 
-- [x] Monorepo scaffold (`apps/mobile`, `apps/server`, `supabase/`, `docs/`, `skills/`)
+- [x] Monorepo scaffold (`apps/mobile`, `apps/server`, `supabase/`, `docs/`, `.claude/skills/`)
 - [x] React Native app init (bare workflow, not Expo managed — needed for native modules; React Navigation + Zustand + XState per ARCHITECTURE.md §3) — RN 0.86.0 in `apps/mobile`, app id `com.lockaltime.app` set on both platforms, jest/lint/typecheck green (manual QA pending: compiling/running Android & iOS — no SDK platforms or Mac on this machine)
 - [x] Node.js API skeleton (Express, TypeScript, Jest+supertest) — `npm install` + `npm test` + `npm run build` all verified green in `apps/server`.
 - [x] Local Supabase project + CLI (`supabase start`), initial migration for `users` — local stack healthy, `users` table + RLS migrated locally and to the linked production project (`LockalTime`), pgTAP suite (12/12) green via `supabase test db`.
 - [x] CI pipeline: lint + typecheck + test, green on empty-feature repo — GitHub Actions (`.github/workflows/ci.yml`): server/mobile/db jobs, Node 24, pgTAP via pinned supabase CLI; run 29637534378 fully green
-- [x] `skills/` seeded: `code-style.md`, `typescript-strictness.md`, `supabase-integration.md`, `testing-standards.md`
+- [x] `.claude/skills/` seeded: `code-style`, `typescript-strictness`, `supabase-integration`, `testing-standards` (later: `i18n`) — each a proper `SKILL.md` with `name`/`description` frontmatter
 
 **DoD:** `npm test` and `npm run lint` pass on an empty-feature repo; local Supabase boots; CI pipeline green.
 
 ## Phase 1 — Auth & Onboarding (Screens 1–3)
 Prerequisites: Phase 0.
 
-- [x] i18n + RTL foundation: en + he locales, RTL-safe layout conventions, no hardcoded UI strings (decided in CLAUDE.md — both languages from day one) — react-i18next + react-native-localize behind `src/i18n/`, typed locale modules with compile-time + runtime key parity, `i18next/no-literal-string` lint rule, conventions in `skills/i18n.md` (manual QA pending: on-device en↔he switch — `forceRTL` applies on next app start; see docs/MANUAL_QA.md)
+- [x] i18n + RTL foundation: en + he locales, RTL-safe layout conventions, no hardcoded UI strings (decided in CLAUDE.md — both languages from day one) — react-i18next + react-native-localize behind `src/i18n/`, typed locale modules with compile-time + runtime key parity, `i18next/no-literal-string` lint rule, conventions in `.claude/skills/i18n/SKILL.md` (manual QA pending: on-device en↔he switch — `forceRTL` applies on next app start; see docs/MANUAL_QA.md)
 - [x] Supabase Auth wiring: email first (fully tested); Google + Apple wired against placeholder config, "manual QA pending" until real credentials (per CLAUDE.md decision) — supabase-js client + email-OTP auth service + discriminated-union auth store wired into App bootstrap, config.toml Google/Apple placeholder blocks (manual QA pending: real OAuth credentials + native SDKs, end-to-end OTP flow — see docs/MANUAL_QA.md)
 - [x] `users` row auto-created via trigger on signup — `handle_new_user()` SECURITY DEFINER trigger on `auth.users` (full_name → name → email local-part → 'user' fallback, ON CONFLICT DO NOTHING), pgTAP 26/26 locally; production push pending (manual, per CLAUDE.md)
 - [x] Onboarding carousel (Screen 1) — 3-page FlatList carousel per DESIGN_GUIDELINES §9 (skip/Next/Get Started, dots, token sizing), design-token module `src/theme/tokens.ts` established, first-launch AsyncStorage gating in App; placeholder en+he copy flagged for the copy pass (manual QA pending: on-device RTL swipe/paging — see docs/MANUAL_QA.md)

@@ -15,10 +15,10 @@ Work through `backlog.md` autonomously, starting at the first unchecked item, ph
 
 ## Per item
 
-1. Read the docs sections the item cites (`docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/DESIGN_GUIDELINES.md` for anything with UI) and the relevant `skills/` files.
-2. **Stage A — tests only:** spawn a subagent whose prompt contains: the backlog item verbatim plus its phase DoD, the exact `skills/` files to read first, and an explicit instruction to write ONLY the test/spec file(s) plus a short rationale — no implementation code — then stop and report.
+1. Read the docs sections the item cites (`docs/ARCHITECTURE.md`, `docs/DATABASE.md`, `docs/DESIGN_GUIDELINES.md` for anything with UI) and the relevant `.claude/skills/` files.
+2. **Stage A — tests only:** spawn a subagent whose prompt contains: the backlog item verbatim plus its phase DoD, the exact `.claude/skills/` files to read first, and an explicit instruction to write ONLY the test/spec file(s) plus a short rationale — no implementation code — then stop and report.
 3. **Gate:** review Stage A's test file yourself against `docs/` and the DoD (that review is the working contract's "agreed as correct"). If wrong or weak, send corrections back to the same subagent via SendMessage until right.
-4. **Stage B — implement:** continue the same subagent via SendMessage (it has the context) to implement per the TDD protocol in `skills/testing-standards.md`: confirm the tests fail for the right reason, minimal implementation, refactor.
+4. **Stage B — implement:** continue the same subagent via SendMessage (it has the context) to implement per the TDD protocol in `.claude/skills/testing-standards/SKILL.md`: confirm the tests fail for the right reason, minimal implementation, refactor.
 5. **Verify yourself** — never trust the subagent's summary: run the affected workspace's `npm test`, `npm run lint`, and typecheck (scripts live per-workspace, e.g. `apps/server`; don't assume a root script aggregates them), and `supabase test db` if the schema changed.
 6. **Close out:** check the box in `backlog.md`, update any `.md` whose claims changed (including CLAUDE.md's Current Status at phase boundaries), commit, push to `origin`. Only commit green. The orchestrator — never a subagent — edits `backlog.md`, commits, and pushes.
 
@@ -36,7 +36,7 @@ Missing credentials, accounts, hardware, or a Mac are **not** stop conditions �
 
 ## Manual-verification DoDs
 
-When a DoD requires a physical device, a Mac (none is currently available — iOS code is authored and contract-tested on this PC, never compiled here), credentials not yet provided, or any other manual step: implement everything implementable, write the manual-QA checklist into `docs/` per `skills/testing-standards.md`, mark the backlog item `[x]` with a "(manual QA pending: <what>)" suffix, and flag it in your report.
+When a DoD requires a physical device, a Mac (none is currently available — iOS code is authored and contract-tested on this PC, never compiled here), credentials not yet provided, or any other manual step: implement everything implementable, write the manual-QA checklist into `docs/` per `.claude/skills/testing-standards/SKILL.md`, mark the backlog item `[x]` with a "(manual QA pending: <what>)" suffix, and flag it in your report.
 
 ## Models
 

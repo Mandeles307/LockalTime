@@ -19,7 +19,7 @@ import PermissionPrimingScreen from './PermissionPrimingScreen';
 // - Priming state: title + body + one Allow CTA. Pressing Allow calls
 //   blockingPermissions.request() — the screen never talks to a native bridge
 //   itself, only to the service contract (Phase 3 swaps the service's
-//   internals, never this screen; skills/testing-standards.md native-modules
+//   internals, never this screen; .claude/skills/testing-standards/SKILL.md native-modules
 //   rule).
 // - Result handling, keyed off the discriminated status: 'granted' fires
 //   onHandled; 'denied' switches to the fallback state; 'undetermined' (OS
@@ -46,7 +46,7 @@ import PermissionPrimingScreen from './PermissionPrimingScreen';
 //   (48). Tokens, never ad-hoc values.
 //
 // RTL: styles use logical properties and never branch on locale
-// (skills/i18n.md); the he renders below prove both states' copy flows
+// (.claude/skills/i18n/SKILL.md); the he renders below prove both states' copy flows
 // through i18n. Real OS dialogs/settings round-trips are not JS-testable and
 // live on the manual QA checklist when the native module lands (Phase 3).
 // react-native-localize is mocked virtually as established; the service

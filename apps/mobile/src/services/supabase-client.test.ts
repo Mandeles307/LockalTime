@@ -1,7 +1,7 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config/supabase-config';
 
 // Phase 1 auth wiring: one shared Supabase client for the whole mobile app
-// (skills/supabase-integration.md — never scatter client construction). The
+// (.claude/skills/supabase-integration/SKILL.md — never scatter client construction). The
 // module exports a memoized getSupabaseClient(); this suite pins the
 // construction contract: configured URL + anon key from the typed config
 // module, session persisted in AsyncStorage (React Native has no
@@ -9,7 +9,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config/supabase-config';
 // @supabase/supabase-js and AsyncStorage are native/npm dependencies not yet
 // installed at test-writing time, so both are mocked virtually (same pattern
 // as react-native-localize in init-i18n.test.ts) — no test touches the
-// network; determinism rule, skills/testing-standards.md.
+// network; determinism rule, .claude/skills/testing-standards/SKILL.md.
 
 interface AuthClientOptionsStub {
   readonly autoRefreshToken?: boolean;
@@ -54,7 +54,7 @@ interface SupabaseClientModule {
 
 // The client is a module-level memoized singleton, so each test loads a fresh
 // module registry to observe its own construction call — otherwise tests
-// would depend on execution order (forbidden by skills/testing-standards.md).
+// would depend on execution order (forbidden by .claude/skills/testing-standards/SKILL.md).
 const loadSupabaseClientModule = (): SupabaseClientModule => {
   let loaded: SupabaseClientModule | undefined;
   jest.isolateModules(() => {

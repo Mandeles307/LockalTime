@@ -1,4 +1,7 @@
-# Skill: Supabase Integration
+---
+name: supabase-integration
+description: Trust boundary, RLS/grants, migrations, and realtime conventions for Supabase. Read before any task touching the database, auth, or realtime.
+---
 
 Read before any task touching the database, auth, realtime, or migrations. The central rule flows from `ARCHITECTURE.md` §3: Supabase is the source of truth for *data*, but is **not** trusted to enforce money-equivalent business logic — that lives in the Node API.
 
@@ -20,8 +23,8 @@ Read before any task touching the database, auth, realtime, or migrations. The c
 - To make one column unwritable while others are (e.g. a user editing their profile but not their own `role`), grant `UPDATE` **column-scoped** (`grant update (display_name, avatar_url) on ... to authenticated;`) rather than table-wide — don't grant table-wide `UPDATE` and try to claw back one column with a column-level `REVOKE`, since a table-wide grant always wins over a column-level revoke in Postgres.
 
 ## Types & client
-- Generate types with `supabase gen types typescript`; treat generated types as authoritative for row shapes (see `typescript-strictness.md`). Regenerate on every schema change.
-- One shared client module per app (`apps/mobile/src/services/supabase-client.ts`, kebab-case per `code-style.md`), exposing a lazily-memoized `getSupabaseClient()`. Never scatter client construction; on React Native the client is constructed with AsyncStorage-backed `persistSession`, `autoRefreshToken: true`, `detectSessionInUrl: false`.
+- Generate types with `supabase gen types typescript`; treat generated types as authoritative for row shapes (see [[typescript-strictness]]). Regenerate on every schema change.
+- One shared client module per app (`apps/mobile/src/services/supabase-client.ts`, kebab-case per [[code-style]]), exposing a lazily-memoized `getSupabaseClient()`. Never scatter client construction; on React Native the client is constructed with AsyncStorage-backed `persistSession`, `autoRefreshToken: true`, `detectSessionInUrl: false`.
 - Service-role keys live only on the Node server, never in the mobile app or any client-reachable place. The mobile app uses the anon key + user session only — `supabase-config.test.ts` enforces this by decoding the shipped key's JWT and asserting `role: 'anon'`.
 
 ## Auth service boundary (mobile)
