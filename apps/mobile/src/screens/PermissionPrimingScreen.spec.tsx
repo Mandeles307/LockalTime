@@ -1,0 +1,324 @@
+import React from 'react';
+import { Linking, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+
+import { I18nProvider } from '../i18n/I18nProvider';
+import { initI18n } from '../i18n/init-i18n';
+import { en } from '../i18n/locales/en';
+import { he } from '../i18n/locales/he';
+import { sizing } from '../theme/tokens';
+import PermissionPrimingScreen from './PermissionPrimingScreen';
+
+// Permission-priming screen (Screen 2), DESIGN_GUIDELINES §9: one screen
+// resolving one hesitation — why the blocking permission is needed — with a
+// single primary CTA per state (§1). Placeholder en+he copy, flagged for the
+// deferred copy pass.
+//
+// Pinned contracts:
+// - Priming state: title + body + one Allow CTA. Pressing Allow calls
+//   blockingPermissions.request() — the screen never talks to a native bridge
+//   itself, only to the service contract (Phase 3 swaps the service's
+//   internals, never this screen; skills/testing-standards.md native-modules
+//   rule).
+// - Result handling, keyed off the discriminated status: 'granted' fires
+//   onHandled; 'denied' switches to the fallback state; 'undetermined' (OS
+//   flow abandoned without an answer) leaves the priming state intact for a
+//   retry — neither completion nor fallback.
+// - DENIED FALLBACK (the backlog item's second half): explanatory copy, an
+//   open-settings affordance (Linking.openSettings, the sole OS touchpoint,
+//   spied here) that keeps the user on the screen for a return-and-retry, and
+//   a proceed-anyway affordance that fires onHandled. Reasoning for
+//   proceed-anyway existing at all (flagged for review): ARCHITECTURE.md §2
+//   lists "permission-denied fallback" as a recovery surface, and §8's
+//   posture (item 8: integrity failures "never block Solo Mode or general
+//   usage") is fail-open for capability shortfalls — the app is a commitment
+//   device, not a jail, and the permission is only exercised when a session
+//   starts. A hard wall would also brick every Phase 1 build outright, since
+//   the placeholder service can only ever answer 'denied'. Session start in
+//   Phase 3 re-checks live status via getStatus(); proceeding here never
+//   fakes a grant.
+// - Like OnboardingScreen, the screen is storage-agnostic: it only fires
+//   onHandled; the App gate owns persistence (permission-store) and what
+//   handling means.
+// - Token sizing: primary CTAs (Allow; the fallback's open-settings) are
+//   buttonHeight (52); proceed-anyway declares the minTouchTarget minimum
+//   (48). Tokens, never ad-hoc values.
+//
+// RTL: styles use logical properties and never branch on locale
+// (skills/i18n.md); the he renders below prove both states' copy flows
+// through i18n. Real OS dialogs/settings round-trips are not JS-testable and
+// live on the manual QA checklist when the native module lands (Phase 3).
+// react-native-localize is mocked virtually as established; the service
+// module is mocked virtually (it does not exist until Stage B); no test
+// touches a real locale, bridge, or the OS settings app.
+
+interface DeviceLocaleStub {
+  readonly countryCode: string;
+  readonly isRTL: boolean;
+  readonly languageCode: string;
+  readonly languageTag: string;
+}
+
+const EN_US: DeviceLocaleStub = {
+  countryCode: 'US',
+  isRTL: false,
+  languageCode: 'en',
+  languageTag: 'en-US',
+};
+
+const mockGetLocales = jest.fn<DeviceLocaleStub[], []>();
+
+jest.mock(
+  'react-native-localize',
+  () => ({
+    getLocales: () => mockGetLocales(),
+  }),
+  { virtual: true },
+);
+
+interface PermissionStatusStub {
+  readonly status: 'granted' | 'denied' | 'undetermined';
+}
+
+const mockGetStatus = jest.fn<Promise<PermissionStatusStub>, []>();
+const mockRequest = jest.fn<Promise<PermissionStatusStub>, []>();
+
+// Mocking the service module pins that the screen goes through the contract
+// surface — an implementation reaching for a native module (or the placeholder
+// directly) fails these tests. getStatus is stubbed but unasserted: the App
+// gate keys off the persisted handled flag in Phase 1, not live status, but
+// an implementation consulting it must not break.
+jest.mock(
+  '../services/blocking-permissions',
+  () => ({
+    blockingPermissions: {
+      getStatus: () => mockGetStatus(),
+      request: () => mockRequest(),
+    },
+  }),
+  { virtual: true },
+);
+
+const renderPermissionPrimingIn = async (
+  locale: 'en' | 'he',
+  onHandled: () => void = () => undefined,
+): Promise<void> => {
+  const i18n = await initI18n();
+  await i18n.changeLanguage(locale);
+
+  // RNTL v14 render is async (returns a Promise) — must be awaited.
+  await render(
+    <I18nProvider i18n={i18n}>
+      <PermissionPrimingScreen onHandled={onHandled} />
+    </I18nProvider>,
+  );
+};
+
+const pressAllow = async (): Promise<void> => {
+  await fireEvent.press(screen.getByTestId('permission-allow-cta'));
+};
+
+// Drives the screen into the denied fallback; findBy* awaits the state flip
+// after the mocked request settles.
+const driveToDeniedFallback = async (): Promise<void> => {
+  mockRequest.mockResolvedValue({ status: 'denied' });
+  await pressAllow();
+  await screen.findByTestId('permission-open-settings-cta');
+};
+
+// The testID element must expose a static (flattenable) style — arrays fine,
+// Pressable function-styles go on an inner element if used.
+const flattenedStyle = (testID: string): ViewStyle =>
+  StyleSheet.flatten(screen.getByTestId(testID).props.style as StyleProp<ViewStyle>);
+
+// DimensionValue can be a string ('50%'); the sizing contract requires plain
+// numeric token values, so anything else is itself a failure.
+const asNumber = (value: unknown): number => {
+  if (typeof value !== 'number') {
+    throw new Error(`expected a numeric style value, got: ${String(value)}`);
+  }
+  return value;
+};
+
+describe('PermissionPrimingScreen', () => {
+  let openSettingsSpy: jest.SpyInstance<Promise<void>, []>;
+
+  beforeEach(() => {
+    mockGetLocales.mockReset();
+    mockGetLocales.mockReturnValue([EN_US]);
+    mockGetStatus.mockReset();
+    mockGetStatus.mockResolvedValue({ status: 'undetermined' });
+    mockRequest.mockReset();
+    mockRequest.mockResolvedValue({ status: 'undetermined' });
+    // Linking is the one OS touchpoint; spied so no test opens real settings.
+    openSettingsSpy = jest
+      .spyOn(Linking, 'openSettings')
+      .mockImplementation(async () => undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  describe('priming state', () => {
+    it('renders the priming title, body, and Allow CTA from the en locale module', async () => {
+      await renderPermissionPrimingIn('en');
+
+      expect(screen.getByText(en.permissionPriming.title)).toBeOnTheScreen();
+      expect(screen.getByText(en.permissionPriming.body)).toBeOnTheScreen();
+      expect(screen.getByText(en.permissionPriming.allow)).toBeOnTheScreen();
+    });
+
+    it('renders the Hebrew priming copy under the he locale, proving the screen flows through i18n', async () => {
+      // Guard: identical bundles would let a hardcoded literal pass below.
+      const enTitle = en.permissionPriming.title;
+      const heTitle = he.permissionPriming.title;
+      expect(heTitle).not.toBe(enTitle);
+
+      await renderPermissionPrimingIn('he');
+
+      expect(screen.getByText(heTitle)).toBeOnTheScreen();
+      expect(screen.queryByText(enTitle)).toBeNull();
+    });
+
+    it('exposes the screen root under the testID the App gate looks for', async () => {
+      await renderPermissionPrimingIn('en');
+
+      expect(screen.getByTestId('permission-priming-screen')).toBeOnTheScreen();
+    });
+
+    it('shows no fallback affordances while priming — one primary action per state', async () => {
+      await renderPermissionPrimingIn('en');
+
+      expect(screen.queryByTestId('permission-open-settings-cta')).toBeNull();
+      expect(screen.queryByTestId('permission-proceed-anyway')).toBeNull();
+    });
+
+    it('requests the blocking permission through the service when Allow is pressed', async () => {
+      await renderPermissionPrimingIn('en');
+
+      await pressAllow();
+
+      expect(mockRequest).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('granted result', () => {
+    it('fires onHandled once when the request resolves granted', async () => {
+      const onHandled = jest.fn<void, []>();
+      mockRequest.mockResolvedValue({ status: 'granted' });
+      await renderPermissionPrimingIn('en', onHandled);
+
+      await pressAllow();
+
+      await waitFor(() => {
+        expect(onHandled).toHaveBeenCalledTimes(1);
+      });
+      expect(screen.queryByTestId('permission-open-settings-cta')).toBeNull();
+    });
+  });
+
+  describe('undetermined result', () => {
+    it('stays in the priming state, leaving Allow available for a retry', async () => {
+      const onHandled = jest.fn<void, []>();
+      mockRequest.mockResolvedValue({ status: 'undetermined' });
+      await renderPermissionPrimingIn('en', onHandled);
+
+      await pressAllow();
+
+      await waitFor(() => {
+        expect(mockRequest).toHaveBeenCalledTimes(1);
+      });
+      expect(onHandled).not.toHaveBeenCalled();
+      expect(screen.getByTestId('permission-allow-cta')).toBeOnTheScreen();
+      expect(screen.queryByTestId('permission-open-settings-cta')).toBeNull();
+    });
+  });
+
+  describe('denied fallback state', () => {
+    it('switches to the fallback with its en copy when the request resolves denied', async () => {
+      await renderPermissionPrimingIn('en');
+
+      await driveToDeniedFallback();
+
+      expect(screen.getByText(en.permissionPriming.denied.title)).toBeOnTheScreen();
+      expect(screen.getByText(en.permissionPriming.denied.body)).toBeOnTheScreen();
+      expect(screen.getByText(en.permissionPriming.denied.openSettings)).toBeOnTheScreen();
+      expect(screen.getByText(en.permissionPriming.denied.proceedAnyway)).toBeOnTheScreen();
+      // One primary action per state: the Allow CTA belongs to priming only.
+      expect(screen.queryByTestId('permission-allow-cta')).toBeNull();
+    });
+
+    it('does not fire onHandled on denial — denial is a recovery state, not completion', async () => {
+      const onHandled = jest.fn<void, []>();
+      await renderPermissionPrimingIn('en', onHandled);
+
+      await driveToDeniedFallback();
+
+      expect(onHandled).not.toHaveBeenCalled();
+    });
+
+    it('renders the Hebrew fallback copy under the he locale', async () => {
+      const enDeniedTitle = en.permissionPriming.denied.title;
+      const heDeniedTitle = he.permissionPriming.denied.title;
+      expect(heDeniedTitle).not.toBe(enDeniedTitle);
+
+      await renderPermissionPrimingIn('he');
+
+      await driveToDeniedFallback();
+
+      expect(screen.getByText(heDeniedTitle)).toBeOnTheScreen();
+      expect(screen.queryByText(enDeniedTitle)).toBeNull();
+    });
+
+    it('opens the OS settings via Linking when open-settings is pressed, staying on the screen', async () => {
+      const onHandled = jest.fn<void, []>();
+      await renderPermissionPrimingIn('en', onHandled);
+      await driveToDeniedFallback();
+
+      await fireEvent.press(screen.getByTestId('permission-open-settings-cta'));
+
+      expect(openSettingsSpy).toHaveBeenCalledTimes(1);
+      // Recovery, not completion: the user returns from settings to retry.
+      expect(onHandled).not.toHaveBeenCalled();
+      expect(screen.getByTestId('permission-open-settings-cta')).toBeOnTheScreen();
+    });
+
+    it('fires onHandled once when proceed-anyway is pressed, so denial never hard-walls the app', async () => {
+      const onHandled = jest.fn<void, []>();
+      await renderPermissionPrimingIn('en', onHandled);
+      await driveToDeniedFallback();
+
+      await fireEvent.press(screen.getByTestId('permission-proceed-anyway'));
+
+      expect(onHandled).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('token sizing (DESIGN_GUIDELINES §6)', () => {
+    it('sizes the Allow CTA to the button-height token', async () => {
+      await renderPermissionPrimingIn('en');
+
+      expect(flattenedStyle('permission-allow-cta').height).toBe(sizing.buttonHeight);
+    });
+
+    it("sizes the fallback's open-settings CTA to the button-height token", async () => {
+      await renderPermissionPrimingIn('en');
+
+      await driveToDeniedFallback();
+
+      expect(flattenedStyle('permission-open-settings-cta').height).toBe(sizing.buttonHeight);
+    });
+
+    it('declares the minimum touch target on the proceed-anyway affordance', async () => {
+      await renderPermissionPrimingIn('en');
+
+      await driveToDeniedFallback();
+
+      const proceedStyle = flattenedStyle('permission-proceed-anyway');
+      expect(asNumber(proceedStyle.minHeight)).toBeGreaterThanOrEqual(sizing.minTouchTarget);
+      expect(asNumber(proceedStyle.minWidth)).toBeGreaterThanOrEqual(sizing.minTouchTarget);
+    });
+  });
+});

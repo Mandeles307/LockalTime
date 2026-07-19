@@ -29,6 +29,21 @@ export const en = {
     next: 'Next',
     getStarted: 'Get Started',
   },
+  // Permission-priming copy (Screen 2) is PLACEHOLDER, flagged for the
+  // deferred copy pass. It resolves the one "why permissions" hesitation
+  // (DESIGN_GUIDELINES §9) and honestly reflects ARCHITECTURE §4: a fixed set
+  // of default categories, applied only while a session runs.
+  permissionPriming: {
+    title: 'Allow app blocking',
+    body: 'To block distracting apps for real, your phone needs a screen-time permission. It blocks a fixed set of categories — social, games, and entertainment — and only while a session you joined is running. It is never used outside a session.',
+    allow: 'Allow',
+    denied: {
+      title: 'Permission not granted',
+      body: "Without it, apps won't actually be blocked during your sessions. You can grant it any time from your phone's settings, or continue without blocking for now.",
+      openSettings: 'Open settings',
+      proceedAnyway: 'Continue without blocking',
+    },
+  },
 };
 
 export type TranslationSchema = typeof en;

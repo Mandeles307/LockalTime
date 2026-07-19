@@ -30,10 +30,20 @@ import { en } from './i18n/locales/en';
 // virtually; the default is a returning user (flag persisted), so every
 // pre-gating assertion about Home keeps holding unchanged.
 //
-// The skip-through-to-Home case is the wiring assertion: an App that passes
-// OnboardingScreen a no-op onComplete keeps every unit suite green while
-// users can never leave onboarding — only driving the real press through the
-// gate proves completion both exits AND persists.
+// The completion-wiring cases are the load-bearing assertions: an App that
+// passes a gate screen a no-op callback keeps every unit suite green while
+// users can never leave that gate — only driving the real press through
+// proves completion both exits AND persists.
+//
+// Phase 1 permission gating (Screen 2): the gate order is Onboarding ->
+// Permission priming -> the rest (ARCHITECTURE.md §2). App shows
+// PermissionPrimingScreen once onboarding is seen but the persisted
+// permission-step flag is unhandled; handling it (granted request OR the
+// denied fallback's proceed-anyway — the flag records that the step was
+// handled, never that blocking works) lands on Home and persists the flag.
+// The blocking-permissions service module is mocked virtually (Stage B), so
+// pressing the screen's real CTAs here proves the full chain App -> screen ->
+// service -> onHandled -> permission store, both sides.
 
 interface DeviceLocaleStub {
   readonly countryCode: string;
@@ -90,9 +100,9 @@ const mockGetItem = jest.fn<Promise<string | null>, [string]>();
 const mockRemoveItem = jest.fn<Promise<void>, [string]>();
 const mockSetItem = jest.fn<Promise<void>, [string, string]>();
 
-// The onboarding gate reads its persisted flag straight through AsyncStorage
-// (via the onboarding store), so App suites control first-launch vs returning
-// user by stubbing the storage read — virtual, same pattern as elsewhere.
+// Both gates read their persisted flags straight through AsyncStorage (via
+// their stores), so App suites control first-launch vs returning user by
+// stubbing the storage read — virtual, same pattern as elsewhere.
 jest.mock(
   '@react-native-async-storage/async-storage',
   () => ({
@@ -106,6 +116,54 @@ jest.mock(
   { virtual: true },
 );
 
+// Keys asserted/stubbed as literals: importing the stores' constants here
+// would fail this whole suite's load in Stage A; the same literals are pinned
+// in onboarding-store.test.ts / permission-store.test.ts, so drift on either
+// side fails one of the two suites.
+const ONBOARDING_SEEN_KEY = '@lockal-time/onboarding-seen';
+const PERMISSION_STEP_HANDLED_KEY = '@lockal-time/permission-step-handled';
+
+interface PersistedFlagsStub {
+  readonly onboardingSeen: boolean;
+  readonly permissionHandled: boolean;
+}
+
+// The two gates persist under separate keys, so the read stub must answer
+// per-key — a blanket resolved value could not express "onboarding seen,
+// permission step still unhandled", the state Screen 2 gating hinges on.
+const stubPersistedFlags = ({ onboardingSeen, permissionHandled }: PersistedFlagsStub): void => {
+  mockGetItem.mockImplementation((key) => {
+    if (key === ONBOARDING_SEEN_KEY) {
+      return Promise.resolve(onboardingSeen ? 'true' : null);
+    }
+    if (key === PERMISSION_STEP_HANDLED_KEY) {
+      return Promise.resolve(permissionHandled ? 'true' : null);
+    }
+    return Promise.resolve(null);
+  });
+};
+
+interface PermissionStatusStub {
+  readonly status: 'granted' | 'denied' | 'undetermined';
+}
+
+const mockPermissionGetStatus = jest.fn<Promise<PermissionStatusStub>, []>();
+const mockPermissionRequest = jest.fn<Promise<PermissionStatusStub>, []>();
+
+// The permission screen renders for real in this suite; mocking the service
+// module (virtually — Stage B) keeps the placeholder/native layer out while
+// letting each test choose the request outcome its path needs.
+jest.mock(
+  './services/blocking-permissions',
+  () => ({
+    blockingPermissions: {
+      getStatus: () => mockPermissionGetStatus(),
+      request: () => mockPermissionRequest(),
+    },
+  }),
+  { virtual: true },
+);
+
 describe('App', () => {
   let forceRTLSpy: jest.SpyInstance<void, [forceRTL: boolean]>;
 
@@ -114,10 +172,14 @@ describe('App', () => {
     mockGetLocales.mockReturnValue([EN_US]);
     mockOnAuthStateChange.mockClear();
     mockUnsubscribe.mockClear();
-    // Default: returning user — the onboarding-seen flag is persisted, so all
+    // Default: returning user — both gate flags are persisted, so all
     // pre-gating Home assertions in this suite hold unchanged.
     mockGetItem.mockReset();
-    mockGetItem.mockResolvedValue('true');
+    stubPersistedFlags({ onboardingSeen: true, permissionHandled: true });
+    mockPermissionGetStatus.mockReset();
+    mockPermissionGetStatus.mockResolvedValue({ status: 'undetermined' });
+    mockPermissionRequest.mockReset();
+    mockPermissionRequest.mockResolvedValue({ status: 'undetermined' });
     mockRemoveItem.mockReset();
     mockRemoveItem.mockResolvedValue(undefined);
     mockSetItem.mockReset();
@@ -167,8 +229,8 @@ describe('App', () => {
     });
   });
 
-  it('renders the onboarding carousel on first launch, when no seen flag is persisted', async () => {
-    mockGetItem.mockResolvedValue(null);
+  it('renders the onboarding carousel on first launch, when no flags are persisted', async () => {
+    stubPersistedFlags({ onboardingSeen: false, permissionHandled: false });
 
     await render(<App />);
 
@@ -177,32 +239,81 @@ describe('App', () => {
     expect(screen.queryByTestId('home-screen')).toBeNull();
   });
 
-  it('skipping onboarding on first launch leaves the gate for Home and persists the flag', async () => {
-    mockGetItem.mockResolvedValue(null);
+  it('skipping onboarding on first launch advances to permission priming and persists the flag', async () => {
+    stubPersistedFlags({ onboardingSeen: false, permissionHandled: false });
     await render(<App />);
     expect(await screen.findByTestId('onboarding-screen')).toBeOnTheScreen();
 
     // RNTL v14 fireEvent is awaited like render, wrapping the state update.
     await fireEvent.press(screen.getByTestId('onboarding-skip'));
 
-    // (a) completion actually exits the gate...
-    expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
+    // (a) completion actually exits the gate — onto Screen 2, never straight
+    // to Home (ARCHITECTURE.md §2 order: Onboarding -> Permission -> rest)...
+    expect(await screen.findByTestId('permission-priming-screen')).toBeOnTheScreen();
     expect(screen.queryByTestId('onboarding-screen')).toBeNull();
+    expect(screen.queryByTestId('home-screen')).toBeNull();
 
-    // (b) ...and persists. Key asserted as a literal: importing the store's
-    // constant here would fail this whole suite's load in Stage A; the same
-    // literal is pinned in onboarding-store.test.ts, so drift on either side
-    // fails one of the two suites. waitFor covers the async storage write.
+    // (b) ...and persists. waitFor covers the async storage write.
     await waitFor(() => {
-      expect(mockSetItem).toHaveBeenCalledWith('@lockal-time/onboarding-seen', 'true');
+      expect(mockSetItem).toHaveBeenCalledWith(ONBOARDING_SEEN_KEY, 'true');
     });
   });
 
-  it('renders Home, not onboarding, once the seen flag is persisted', async () => {
+  it('renders Home, skipping both gates, once both flags are persisted', async () => {
     await render(<App />);
 
     expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
     expect(screen.queryByTestId('onboarding-screen')).toBeNull();
+    expect(screen.queryByTestId('permission-priming-screen')).toBeNull();
+  });
+
+  it('shows permission priming, not Home, when onboarding is seen but the step is unhandled', async () => {
+    // The returning-user recovery case: onboarding never re-shows, but an
+    // unresolved permission step still gates before Home.
+    stubPersistedFlags({ onboardingSeen: true, permissionHandled: false });
+
+    await render(<App />);
+
+    expect(await screen.findByTestId('permission-priming-screen')).toBeOnTheScreen();
+    expect(screen.queryByTestId('onboarding-screen')).toBeNull();
+    expect(screen.queryByTestId('home-screen')).toBeNull();
+  });
+
+  it('granted permission request lands on Home and persists the handled flag', async () => {
+    stubPersistedFlags({ onboardingSeen: true, permissionHandled: false });
+    mockPermissionRequest.mockResolvedValue({ status: 'granted' });
+    await render(<App />);
+    expect(await screen.findByTestId('permission-priming-screen')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByTestId('permission-allow-cta'));
+
+    // (a) handling actually exits the gate...
+    expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
+    expect(screen.queryByTestId('permission-priming-screen')).toBeNull();
+
+    // (b) ...and persists, so returning users skip the priming.
+    await waitFor(() => {
+      expect(mockSetItem).toHaveBeenCalledWith(PERMISSION_STEP_HANDLED_KEY, 'true');
+    });
+  });
+
+  it('proceeding anyway from the denied fallback lands on Home and persists the handled flag', async () => {
+    // The recovery path the backlog item exists for: denial must never
+    // hard-wall the app (see PermissionPrimingScreen.spec.tsx for the full
+    // reasoning), and proceeding still counts as handling the step.
+    stubPersistedFlags({ onboardingSeen: true, permissionHandled: false });
+    mockPermissionRequest.mockResolvedValue({ status: 'denied' });
+    await render(<App />);
+    expect(await screen.findByTestId('permission-priming-screen')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByTestId('permission-allow-cta'));
+    await fireEvent.press(await screen.findByTestId('permission-proceed-anyway'));
+
+    expect(await screen.findByTestId('home-screen')).toBeOnTheScreen();
+    expect(screen.queryByTestId('permission-priming-screen')).toBeNull();
+    await waitFor(() => {
+      expect(mockSetItem).toHaveBeenCalledWith(PERMISSION_STEP_HANDLED_KEY, 'true');
+    });
   });
 
   it('detaches the auth listener on unmount, so remounts never leak listeners', async () => {

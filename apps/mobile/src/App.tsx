@@ -10,8 +10,14 @@ import type { SupportedLocale } from './i18n/resolve-device-locale';
 import { syncLayoutDirection } from './i18n/sync-layout-direction';
 import HomeScreen from './screens/HomeScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import PermissionPrimingScreen from './screens/PermissionPrimingScreen';
 import { attachAuthStateListener } from './state/auth-store';
 import { hydrateOnboardingStatus, markOnboardingSeen, useOnboardingStore } from './state/onboarding-store';
+import {
+  hydratePermissionStepStatus,
+  markPermissionStepHandled,
+  usePermissionStore,
+} from './state/permission-store';
 
 // Testable app factory (the runtime shell is index.js, which only registers
 // this component) — mirrors the app.ts/server.ts split in apps/server.
@@ -29,9 +35,18 @@ const handleOnboardingComplete = (): void => {
   markOnboardingSeen();
 };
 
+// Handling the permission step (granted request or the denied fallback's
+// proceed-anyway — indistinguishable to the gate by design: the flag records
+// that the step was handled, never that blocking works) marks the persisted
+// flag; same optimistic, fail-open, not-awaited shape as onboarding above.
+const handlePermissionHandled = (): void => {
+  markPermissionStepHandled();
+};
+
 const App = (): React.JSX.Element | null => {
   const [i18nInstance, setI18nInstance] = useState<I18nInstance | null>(null);
   const onboarding = useOnboardingStore((state) => state.onboarding);
+  const permissionStep = usePermissionStore((state) => state.permissionStep);
 
   useEffect(() => {
     let isMounted = true;
@@ -40,11 +55,12 @@ const App = (): React.JSX.Element | null => {
     // in cleanup so remounts never leak listeners.
     const detachAuthListener = attachAuthStateListener();
 
-    // First-launch gate hydration runs alongside i18n init; both async reads
+    // First-launch gate hydrations run alongside i18n init; all async reads
     // resolve before anything renders (see the null gate below). Not awaited:
-    // completion is observed through the store, and the promise never rejects
-    // (fail-open inside the store).
+    // completion is observed through the stores, and the promises never
+    // reject (fail-open inside the stores).
     hydrateOnboardingStatus();
+    hydratePermissionStepStatus();
 
     initI18n().then((instance) => {
       // initI18n only ever resolves to a supported language, so narrowing by
@@ -62,21 +78,35 @@ const App = (): React.JSX.Element | null => {
     };
   }, []);
 
-  if (i18nInstance === null || onboarding.status === 'hydrating') {
+  if (
+    i18nInstance === null ||
+    onboarding.status === 'hydrating' ||
+    permissionStep.status === 'hydrating'
+  ) {
     // Blank gate until the i18n instance is ready (rendering earlier would
-    // flash raw translation keys) AND the onboarding flag is hydrated
-    // (deciding earlier would flash the wrong first screen).
+    // flash raw translation keys) AND both gate flags are hydrated (deciding
+    // earlier would flash the wrong first screen).
     return null;
   }
 
   if (!onboarding.hasSeenOnboarding) {
-    // Conditional render, not a navigator route: onboarding is a one-time
-    // pre-app gate, so it never sits on the navigation stack (no back
-    // gesture into it). Screen 2 (permission priming) slots into this flow
-    // when it lands.
+    // Conditional render, not a navigator route: the pre-app gates are
+    // one-time flows, so they never sit on the navigation stack (no back
+    // gesture into them).
     return (
       <I18nProvider i18n={i18nInstance}>
         <OnboardingScreen onComplete={handleOnboardingComplete} />
+      </I18nProvider>
+    );
+  }
+
+  if (!permissionStep.hasHandledPermissionStep) {
+    // Screen 2, after onboarding and before the rest (ARCHITECTURE.md §2
+    // order: Onboarding -> Permission -> Auth/Home). Same conditional-render
+    // rationale as onboarding above.
+    return (
+      <I18nProvider i18n={i18nInstance}>
+        <PermissionPrimingScreen onHandled={handlePermissionHandled} />
       </I18nProvider>
     );
   }
